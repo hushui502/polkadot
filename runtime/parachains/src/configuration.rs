@@ -73,12 +73,26 @@ pub struct HostConfiguration<BlockNumber> {
 	pub hrmp_max_message_num_per_candidate: u32,
 	/// The minimum period, in blocks, between which parachains can update their validation code.
 	///
+	/// This number is used to prevent parachains from spamming the relay chain with validation code
+	/// upgrades. The only thing it controls is the number of blocks the `UpgradeRestrictionSignal`
+	/// is set for the parachain in question.
+	///
 	/// If PVF pre-checking is enabled this should be greater than the maximum number of blocks
 	/// PVF pre-checking can take. Intuitively, this number should be greater than the duration
 	/// specified by [`pvf_voting_ttl`]. Unlike, [`pvf_voting_ttl`], this parameter uses blocks
 	/// as a unit.
 	pub validation_upgrade_frequency: BlockNumber,
 	/// The delay, in blocks, before a validation upgrade is applied.
+	///
+	/// The delay is counted from the relay-parent of the candidate that signalled the upgrade. The
+	/// sum of that block and the this delay is dubbed `expected_at`. The first parachain block with
+	/// relay-parent >= `expected_at` will run the current code and will apply the upgrade. The next
+	/// parachain block will run the upgraded validation code.
+	///
+	/// At some point we are going to change this to be counted from the moment when the candidate
+	/// that signalled the upgrade is enacted. See the issue [#4601].
+	///
+	/// [#4601]: https://github.com/paritytech/polkadot/issues/4601
 	pub validation_upgrade_delay: BlockNumber,
 
 	/**
